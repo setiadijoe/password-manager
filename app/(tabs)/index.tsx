@@ -1,75 +1,198 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import * as SecureStore from "expo-secure-store";
+import React, { JSX, useEffect, useState } from "react";
+import {
+  Alert,
+  Button,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import uuid from "react-native-uuid";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+interface PasswordEntry {
+  id: string;
+  service: string;
+  username: string;
+  password: string;
+}
 
-export default function HomeScreen() {
+export default function App(): JSX.Element {
+  const [service, setService] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [entries, setEntries] = useState<PasswordEntry[]>([]);
+
+  useEffect(() => {
+    loadPasswords();
+  }, []);
+
+  const loadPasswords = async () => {
+    try {
+      const saved = await SecureStore.getItemAsync("passwords");
+      if (saved) {
+        const parsed: PasswordEntry[] = JSON.parse(saved);
+        setEntries(parsed);
+      }
+    } catch (e) {
+      console.error("Failed to load passwords", e);
+    }
+  };
+
+  const savePasswords = async (data: PasswordEntry[]) => {
+    try {
+      await SecureStore.setItemAsync("passwords", JSON.stringify(data));
+    } catch (e) {
+      console.error("Failed to save passwords", e);
+    }
+  };
+
+  const addEntry = () => {
+    if (!service || !username || !password) {
+      Alert.alert("Missing fields");
+      return;
+    }
+
+    const newEntry: PasswordEntry = {
+      id: uuid.v4().toString(),
+      service,
+      username,
+      password,
+    };
+
+    const updated = [...entries, newEntry];
+    setEntries(updated);
+    savePasswords(updated);
+
+    setService("");
+    setUsername("");
+    setPassword("");
+  };
+
+  const deleteEntry = (id: string) => {
+    const updated = entries.filter((e) => e.id !== id);
+    setEntries(updated);
+    savePasswords(updated);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Password Manager</Text>
+
+      <TextInput
+        placeholder="Service"
+        value={service} 
+        onChangeText={setService}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Password"  
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        style={styles.input}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Button title="Add Password" onPress={addEntry} />
+
+      <FlatList
+        data={entries}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.entry}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.entryText}>
+                📌 {item.service}
+              </Text>
+
+              <View style={styles.itemRow}>
+                <Text style={styles.subText}>👤 {item.username}</Text>
+                <Button
+                  title="Copy"
+                  onPress={() => Clipboard.setStringAsync(item.username)}
+                />
+              </View>
+
+              <View style={styles.itemRow}>
+                <Text style={styles.passwordText}>🔐 ********</Text>
+                <Button
+                  title="Copy"
+                  onPress={() => Clipboard.setStringAsync(item.password)}
+                />
+              </View>
+
+              <View style={styles.deleteButton}>
+                <Button
+                  title="Delete"
+                  onPress={() => deleteEntry(item.id)}
+                  color="red"
+                />
+              </View>
+              </View>
+          </View>
+        )}
+        style={{ marginTop: 20 }}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { padding: 20, marginTop: 40 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ebddb9",
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 6,
+    backgroundColor: "#d1c8ae",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  entry: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 10,
+    backgroundColor: "#eee",
+    marginBottom: 5,
+    borderRadius: 5,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  passwordText: {
+    fontSize: 14,
+    color: "#333",
+    marginTop: 4,
+    fontStyle: "italic",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  entryText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  subText: {
+    fontSize: 15,
+    flex: 1,
+  },
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+  },
+  deleteButton: {
+    marginTop: 10,
   },
 });
