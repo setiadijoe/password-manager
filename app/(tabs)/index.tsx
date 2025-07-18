@@ -1,5 +1,4 @@
 import * as Clipboard from 'expo-clipboard';
-import * as SecureStore from "expo-secure-store";
 import React, { JSX, useEffect, useState } from "react";
 import {
   Alert,
@@ -11,6 +10,7 @@ import {
   View,
 } from "react-native";
 import uuid from "react-native-uuid";
+import { LoadPassword, SavePassword } from "./password-managers/password-manager";
 
 interface PasswordEntry {
   id: string;
@@ -26,28 +26,8 @@ export default function App(): JSX.Element {
   const [entries, setEntries] = useState<PasswordEntry[]>([]);
 
   useEffect(() => {
-    loadPasswords();
+    LoadPassword();
   }, []);
-
-  const loadPasswords = async () => {
-    try {
-      const saved = await SecureStore.getItemAsync("passwords");
-      if (saved) {
-        const parsed: PasswordEntry[] = JSON.parse(saved);
-        setEntries(parsed);
-      }
-    } catch (e) {
-      console.error("Failed to load passwords", e);
-    }
-  };
-
-  const savePasswords = async (data: PasswordEntry[]) => {
-    try {
-      await SecureStore.setItemAsync("passwords", JSON.stringify(data));
-    } catch (e) {
-      console.error("Failed to save passwords", e);
-    }
-  };
 
   const addEntry = () => {
     if (!service || !username || !password) {
@@ -64,7 +44,7 @@ export default function App(): JSX.Element {
 
     const updated = [...entries, newEntry];
     setEntries(updated);
-    savePasswords(updated);
+    SavePassword(updated);
 
     setService("");
     setUsername("");
@@ -74,7 +54,7 @@ export default function App(): JSX.Element {
   const deleteEntry = (id: string) => {
     const updated = entries.filter((e) => e.id !== id);
     setEntries(updated);
-    savePasswords(updated);
+    SavePassword(updated);
   };
 
   return (
