@@ -1,50 +1,49 @@
-# Welcome to your Expo app 👋
+# 🔐 Password Manager
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A simple and secure offline password manager built with React Native and Expo.  
+It helps you store your accounts and passwords **locally** on your device — no internet connection or cloud storage needed.
 
-## Get started
+---
 
-1. Install dependencies
+## 🚀 Features
 
-   ```bash
-   npm install
-   ```
+- Store and manage account credentials securely
+- Clean and minimal user interface
+- Fully offline — your data stays on your device
+- Built with Expo for cross-platform performance
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 📦 Download APK
 
-In the output, you'll find options to open the app in a
+You can download the latest Android APK directly from the [`release/`](./release) folder.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+👉 [Download Latest APK](./release/PasswordManager.apk)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+_No Play Store needed. Just sideload the APK on your device._
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## ☕ Buy Me a Coffee
 
-```bash
-npm run reset-project
-```
+If you found this app helpful or want to support future development:
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+[![Give me your support]https://saweria.co/rascalbro)](https://saweria.co/rascalbro)
 
-## Learn more
+Your support means a lot! 💖
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 🛠 Tech Stack
 
-## Join the community
+- [React Native](https://reactnative.dev/)
+- [Expo](https://expo.dev/)
+- Local Storage with [`AsyncStorage`](https://react-native-async-storage.github.io/async-storage/)
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📄 License
+
+MIT License — feel free to use, modify, and distribute.
+
+---
