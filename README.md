@@ -18,19 +18,11 @@ It helps you store your accounts and passwords **locally** on your device — no
 
 You can download the latest Android APK directly from the [`release/`](./release) folder.
 
-👉 [Download Latest APK](./release/PasswordManager.apk)
+👉 [Download Latest APK](./releases/password-manager.apk)
 
 _No Play Store needed. Just sideload the APK on your device._
 
 ---
-
-## ☕ Buy Me a Coffee
-
-If you found this app helpful or want to support future development:
-
-[![Give me your support]https://saweria.co/rascalbro)](https://saweria.co/rascalbro)
-
-Your support means a lot! 💖
 
 ---
 
@@ -47,3 +39,11 @@ Your support means a lot! 💖
 MIT License — feel free to use, modify, and distribute.
 
 ---
+
+## ☕ Buy Me a Coffee
+
+If you found this app helpful or want to support future development:
+
+[![Give me your support]https://saweria.co/rascalbro)](https://saweria.co/rascalbro)
+
+Your support means a lot! 💖
