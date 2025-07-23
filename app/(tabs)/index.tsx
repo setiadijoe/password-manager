@@ -1,16 +1,18 @@
 import * as Clipboard from 'expo-clipboard';
 import React, { JSX, useEffect, useState } from "react";
 import {
-  Alert,
   Button,
   FlatList,
   StyleSheet,
   Text,
   TextInput,
+  Alert,
   View,
+  AppState,
 } from "react-native";
 import uuid from "react-native-uuid";
 import { LoadPassword, SavePassword } from "./password-managers/password-manager";
+import * as LocalAuthentication from 'expo-local-authentication';
 
 interface PasswordEntry {
   id: string;
@@ -24,9 +26,39 @@ export default function App(): JSX.Element {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [entries, setEntries] = useState<PasswordEntry[]>([]);
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
-    LoadPassword();
+    // const checkBiometric = async () => {
+    //   const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    //   const supported = await LocalAuthentication.isEnrolledAsync();
+  
+    //   if (hasHardware && supported) {
+    //     const result = await LocalAuthentication.authenticateAsync({
+    //       promptMessage: 'Authenticate to unlock vault',
+    //     });
+  
+    //     if (!result.success) {
+    //       Alert.alert('Authentication failed', 'You cannot access the vault.');
+    //       // Optional: Exit or lock the app
+    //     } else {
+    //       // Mark app as unlocked
+    //       setIsUnlocked(true);
+    //       const loaded = await LoadPassword();
+    //       if (loaded) setEntries(loaded);
+    //     }
+    //   } else {
+    //     Alert.alert('Biometric not available', 'Please use a supported device.');
+    //   }
+    // };
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') {
+        setIsUnlocked(false); // lock app when backgrounded
+      }
+    });
+    
+    // checkBiometric();
+    return () => sub.remove();
   }, []);
 
   const addEntry = () => {
@@ -56,6 +88,32 @@ export default function App(): JSX.Element {
     setEntries(updated);
     SavePassword(updated);
   };
+
+  const handleManualUnlock = async () => {
+    if (isUnlocked) return;
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate to unlock vault',
+      fallbackLabel: 'Use Passcode',
+    });
+
+    if (result.success) {
+      setIsUnlocked(true);
+      const loaded = await LoadPassword();
+      if (loaded) setEntries(loaded);
+    } else {
+      Alert.alert('Authentication failed');
+    }
+  };
+
+  if (!isUnlocked) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }}>
+        <Text style={{ color: 'white', fontSize: 24, marginBottom: 20 }}>🔐 Locked</Text>
+        <Button title="Unlock Vault" onPress={handleManualUnlock} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

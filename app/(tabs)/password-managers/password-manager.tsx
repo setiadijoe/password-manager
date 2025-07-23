@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import CryptoJS from "crypto-js";
 
 interface PasswordEntry {
     id: string;
@@ -7,34 +8,61 @@ interface PasswordEntry {
     password: string;
 }
 
+const ENCRYPTION_KEY_ID = "vault_key";
+
+// Generate a 256-bit random key
+const generateRandomKey = (): string => {
+    return CryptoJS.lib.WordArray.random(32).toString(); // 256 bits
+  }
+
+// Get or create encryption key protected in SecureStore
+export const getOrCreateKey = async (): Promise<string> => {
+    let key = await SecureStore.getItemAsync(ENCRYPTION_KEY_ID);
+    if (!key) {
+      key = generateRandomKey();
+      await SecureStore.setItemAsync(ENCRYPTION_KEY_ID, key);
+    }
+    return key;
+};
+
 export const SavePassword = async (data: PasswordEntry[]) => {
     try {
-        await SecureStore.setItemAsync("password", JSON.stringify(data));
+        let key = await getOrCreateKey();
+
+        const plaintext = JSON.stringify(data)
+        const encrypted = CryptoJS.AES.encrypt(plaintext, key).toString();
+
+        await SecureStore.setItemAsync("password", encrypted);
     } catch (e) {
         console.error("Failed to save passwords", e);
     }
 }
 
-export const LoadPassword = async () => {
+export const LoadPassword = async (): Promise<PasswordEntry[] | null> => {
     try {
-        const saved = await SecureStore.getItemAsync("password");
-        if (saved) {
-            return JSON.parse(saved);
-        }
+        const encrypted = await SecureStore.getItemAsync("password");
+        const key = await getOrCreateKey();
+
+        if (!encrypted || !key ) return [];
+
+        const decrypted = CryptoJS.AES.decrypt(encrypted, key).toString(CryptoJS.enc.Utf8);
+        return JSON.parse(decrypted);
     } catch (e) {
         console.error("Failed to load passwords", e);
+        return null;
     }
 }
 
-export const DeletePassword = async (id: string) => {
+export const DeletePassword = async (id: string): Promise<boolean> => {
     try {
-        const saved = await SecureStore.getItemAsync("password");
-        if (saved) {
-            const parsed: PasswordEntry[] = JSON.parse(saved);
-            const filtered = parsed.filter((entry) => entry.id !== id);
-            await SecureStore.setItemAsync("password", JSON.stringify(filtered));
-        }
+        const existing = await LoadPassword();
+        if (!existing) return false;
+    
+        const updated = existing.filter((entry) => entry.id !== id);
+        await SavePassword(updated);
+        return true;
     } catch (e) {
         console.error("Failed to delete password", e);
+        return false;
     }
 }
